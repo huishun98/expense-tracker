@@ -17,7 +17,7 @@ const spreadsheetInfo = {
   range: 'Sheet1!A2:E',
 }
 
-type Data = {
+export type Data = {
   status: number;
 };
 
@@ -57,9 +57,6 @@ interface File {
   file_unique_id: string
   file_size: number
 }
-
-// Initialize webhook
-fetch(`${telegramBotApi}/setWebhook`, { ...httpOpts, method: 'POST', body: JSON.stringify({ url: process.env.TELEGRAM_WEBHOOK }) });
 
 const sendMessage = async (chatId: number, content: string) => {
   const resp = await fetch(`${telegramBotApi}/sendMessage`,
@@ -171,7 +168,7 @@ export default async function handler(
     return
   }
 
-  const destination = path.resolve("./", pdfFile);
+  const destination = path.resolve("/tmp/", pdfFile);
   if (fs.existsSync(destination)) fs.unlinkSync(destination);
 
   const fileStream = fs.createWriteStream(destination, { flags: 'wx' });
@@ -217,3 +214,5 @@ export default async function handler(
 
   res.status(update.status).json({ status: update.status });
 }
+
+export { telegramBotApi, httpOpts }
