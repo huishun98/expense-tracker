@@ -71,4 +71,29 @@ const populateExpenses = async (sheets: sheets_v4.Sheets, filepath: string, ...a
     return update.status
 }
 
-export { populateExpenses, extractExpenses }
+const filterExpenses = async (sheets: sheets_v4.Sheets, month: number, year: number, opt?: string) => {
+    // get old values
+    const sheet = await sheets.spreadsheets.values.get({
+        ...spreadsheetInfo,
+        valueRenderOption: 'UNFORMATTED_VALUE',
+    });
+    let rows = sheet.data.values || [] as any[][];
+
+
+    rows = rows.filter(row => {
+        const condition = (opt === 'c' && row[4] - row[3] > 0) || (opt === 'd' && row[4] - row[3] < 0) || !opt
+        return row[1] == month && row[6] == year && condition
+    })
+    return rows.sort((a, b) => a[0] - b[0]);
+}
+
+const formatExpenses = (expenses: any[][]): string => {
+    return expenses.map((row, i) => {
+        let day = row[0],
+            description = row[2],
+            expense = row[3] - row[4]
+        return `${day}号 || ${expense > 0 ? `${expense}` : `(${expense * -1})`} || ${description.toLowerCase()}`
+    }).join('\n');
+}
+
+export { populateExpenses, extractExpenses, filterExpenses, formatExpenses }

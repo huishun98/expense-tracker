@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { Message } from "@/bot/types";
 import { sendMessage } from "@/bot/message";
 import { downloadFile } from "@/bot/document";
-import { populateExpenses } from "@/sheets/expenses";
+import { filterExpenses, formatExpenses, populateExpenses } from "@/sheets/expenses";
 import { googleCreds, spreadsheetURL, telegramChatId, tmpDir } from "@/constants";
 import { authenticate } from "@/sheets/auth";
 import { formatSummary, getSummary } from "@/sheets/summary";
@@ -35,7 +35,7 @@ export default async function handler(
   let text = message.caption || message.text || ""
   text = text.toLowerCase().trim()
 
-  let sheets, msg;
+  let sheets, msg, match;
 
   switch (text) {
     case "/summary":
@@ -50,7 +50,7 @@ export default async function handler(
 
       sheets = authenticate(googleCreds)
 
-      const match = destination.match(/\b\d{4}\b/)
+      match = destination.match(/\b\d{4}\b/)
       const year: number = match ? Number(match[0]) : new Date().getFullYear();
       status = await populateExpenses(sheets, destination, text, year)
       if (status == 404) {
@@ -62,7 +62,13 @@ export default async function handler(
       await sendMessage(message.chat.id, msg)
       break;
     default:
-      break;
+      // accepts monthyear e.g. 0324
+      match = text.match(/^(\d{2})(\d{2})([dc])?$/);
+      if (!match) break;
+      sheets = authenticate(googleCreds);
+      const expenses = await filterExpenses(sheets, Number(match[1]), Number(`20${match[2]}`), match[3]);
+      msg = formatExpenses(expenses)
+      await sendMessage(message.chat.id, msg)
   }
 
   res.status(status).json({ status });
