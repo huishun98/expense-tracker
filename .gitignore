@@ -36,3 +36,4 @@ yarn-error.log*
 next-env.d.ts
 
 development-349415-f261934795f2.json
+*.pdf

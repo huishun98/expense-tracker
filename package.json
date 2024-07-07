@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "accounting": "^0.4.1",
     "googleapis": "95.0.0",
     "next": "14.2.4",
     "pdf-parse": "^1.1.1",
@@ -16,6 +17,7 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@types/accounting": "^0.4.5",
     "@types/node": "^20",
     "@types/pdf-parse": "^1.1.4",
     "@types/react": "^18",
