@@ -2,8 +2,8 @@ import { spreadsheetInfo } from "@/constants";
 import { sheets_v4 } from "googleapis";
 
 const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+    'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
 ]
 
 const getSummary = async (sheets: sheets_v4.Sheets): Promise<any[][]> => {
@@ -20,10 +20,10 @@ const formatSummary = (summary: any[][]): string => {
         if (i == 0) return
         let month = months[row[1] - 1],
             year = row[0],
-            val = row[4]
+            val = row[4].toFixed(2)
+        month = month.charAt(0).toUpperCase() + month.slice(1);
         return `${month} ${year} — ${val}`
     }).join('\n');
 }
 
-export { getSummary, formatSummary }
-
+export { getSummary, formatSummary, months }

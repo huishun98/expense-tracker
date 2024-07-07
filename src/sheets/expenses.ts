@@ -3,40 +3,48 @@ import fs from 'fs';
 import accounting from 'accounting'
 import { spreadsheetInfo } from '@/constants';
 import { sheets_v4 } from 'googleapis';
+import { months } from './summary';
 
-const exclusions = new Set(['Previous balance', 'Total outstanding balance', 'Closing balance', 'Credit card payment'])
+const exclusions = new Set(['Previous balance', 'Total outstanding balance', 'Closing balance'])
 
 // https://www.npmjs.com/package/pdf-parse
-const extractExpenses = async (filepath: string, ...args: any[]) => {
-    let dataBuffer = fs.readFileSync(filepath);
-
-    const data = await pdf(dataBuffer)
-    const pattern = /(\d{1,2} \w{3})(.+?)\n?(\+?\d{1,3}(?:,\d{3})*\.\d{2})/g;
+const extractExpenses = async (text: string, ...args: any[]) => {
+    const pattern = /(\d{1,2})\s(\w{3})\n?(.+?)(?:\n1\s\w{3}\s=\s[\d.,]+\sSGD\n[\d.,]+\s\w{3})?\n?(\+?\d{1,3}(?:,\d{3})*\.\d{2})/g;
 
     let matches;
     const results = [];
 
-    while ((matches = pattern.exec(data.text)) !== null) {
-        const date = matches[1].trim();
-        const description = matches[2].trim();
+    while ((matches = pattern.exec(text)) !== null) {
+
+        const day = matches[1].trim();
+
+        const month = matches[2].trim();
+        let monthIndex = months.indexOf(month.toLowerCase())
+        if (monthIndex < 0) continue
+        monthIndex = monthIndex + 1
+
+        const description = matches[3].trim();
         let credit = 0, debit = 0
 
-        if (matches[3].charAt(0) == "+") {
-            credit = accounting.unformat(matches[3]);
+        const val = matches[4]
+        if (val.charAt(0) == "+") {
+            credit = accounting.unformat(val);
         } else {
-            debit = accounting.unformat(matches[3]);
+            debit = accounting.unformat(val);
         }
 
         if (exclusions.has(description)) continue
 
-        results.push([date, description, debit, credit, ...args]);
+        results.push([day, monthIndex, description, debit, credit, ...args]);
     }
 
     return results
 }
 
 const populateExpenses = async (sheets: sheets_v4.Sheets, filepath: string, ...args: any[]): Promise<number> => {
-    const results = await extractExpenses(filepath, ...args)
+    let dataBuffer = fs.readFileSync(filepath);
+    const { text } = await pdf(dataBuffer)
+    const results = await extractExpenses(text, ...args)
     if (results.length <= 0) {
         return 404
     }
@@ -63,4 +71,4 @@ const populateExpenses = async (sheets: sheets_v4.Sheets, filepath: string, ...a
     return update.status
 }
 
-export { populateExpenses }
+export { populateExpenses, extractExpenses }

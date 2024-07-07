@@ -15,7 +15,7 @@ const telegramChatId = Number(process.env.TELEGRAM_CHAT_ID)
 const googleCreds = process.env.GSHEET_CREDS || ""
 const spreadsheetInfo = {
     spreadsheetId: process.env.SPREADSHEET_ID,
-    range: 'Raw!A2:F',
+    range: 'Raw!A2:G',
 }
 const spreadsheetURL = `https://docs.google.com/spreadsheets/d/${spreadsheetInfo.spreadsheetId}`
 
